@@ -54,7 +54,7 @@ class Tool(benchexec.tools.template.BaseTool):
 
     def determine_result(self, returncode, returnsignal, output, isTimeout):
         output = '\n'.join(output)
-        status = "UNKNOWN"
+        status = "ERROR"
         if "UNKNOWN" in output:
             status = result.RESULT_UNKNOWN
         elif "TRUE" in output:
@@ -67,16 +67,18 @@ class Tool(benchexec.tools.template.BaseTool):
             status = result.RESULT_FALSE_FREE
         elif "FALSE" in output:
             status = result.RESULT_FALSE_REACH
-        if (status == "UNKNOWN" and isTimeout):
+        if (status == "ERROR" and isTimeout):
             status = "TIMEOUT"
         return status
 
     def program_files(self, executable):
-        """
-        Returns a list of files or directories that are necessary to run the tool.
-        """
-        return [executable]
-
+        """ List of files/directories necessary to build and run the tool. """
+        executableDir = os.path.dirname(executable)
+        dependencies = [
+            "predator-repo",
+            "build-all.sh"
+            ]
+        return [executable] + util.flatten(util.expand_filename_pattern(dep, installDir) for dep in dependencies)
 
     def working_directory(self, executable):
         return os.path.dirname(executable)
